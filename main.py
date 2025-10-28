@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt
 from formulas import categories
 from styles import DARK_THEME, LIGHT_THEME
 
+from calculator import Calculator
 
 class PhysicsCalculator(QMainWindow):
     def __init__(self):
@@ -235,9 +236,64 @@ class PhysicsCalculator(QMainWindow):
         # обновление интерфейса
         self.variables_layout.update()
 
+    # метод для вычисления
     def calculate(self):
-        pass
+        if not hasattr(self, 'current_formula_name'):
+            self.result_label.setText("Сначала выберите формулу")
+            return
+        
+        # сбрасываем стили всех полей ввода
+        self.reset_input_fields_style()
+        
+        # получаем текущую категорию и формулу
+        category = self.category_combo.currentText()
+        formula_name = self.current_formula_name
+        formula_data = {formula_name: categories[category][formula_name]}
+        
+        # собираем значения из полей ввода
+        input_values = {}
+        for var_name, input_field in self.input_fields.items():
+            input_values[var_name] = input_field.text()
+        
+        # вычисляем результат
+        calculator = Calculator()
+        calculation_result = calculator.calculate(formula_data, input_values)
+        
+        # обрабатываем результат
+        if calculation_result["success"]:
+            result = calculation_result["result"]
+            target_var = calculation_result["target_variable"]
+            
+            # отображаем результат в соответствующем поле ввода зеленым цветом
+            if target_var in self.input_fields:
+                result_field = self.input_fields[target_var]
+                result_field.setText(f"{result:.6f}")
+                
+                # применяем зеленый стиль для поля с результатом
+                result_field.setStyleSheet("""
+                    QLineEdit {
+                        background-color: #388e3c;
+                        color: #ffffff;
+                        border: 2px solid #4caf50;
+                        border-radius: 3px;
+                        padding: 5px;
+                        font-weight: bold;
+                    }
+                """)
+            
+            # очищаем сообщение об ошибке
+            self.result_label.setText("")
+            
+        else:
+            # показываем ошибку красным цветом снизу
+            self.result_label.setText(f"Ошибка: {calculation_result['error']}")
+            self.result_label.setStyleSheet("color: red; font-size: 12px;")
 
+    def reset_input_fields_style(self):
+        """Сбрасывает стили всех полей ввода к обычному"""
+        theme = DARK_THEME if self.current_theme == "dark" else LIGHT_THEME
+        for input_field in self.input_fields.values():
+            input_field.setStyleSheet(theme["input_field"])
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
