@@ -1,13 +1,188 @@
 import sys
 import os
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                             QHBoxLayout, QLabel,
-                             QListWidget, QComboBox, QLineEdit, QPushButton)
+                             QHBoxLayout, QLabel, QListWidget, QComboBox,
+                             QLineEdit, QPushButton, QDialog, QMessageBox, QTableWidgetItem, QTableWidget, QTabWidget)
 from PyQt6.QtCore import Qt
 from formulas import categories
 from styles import DARK_THEME, LIGHT_THEME
 
 from calculator import Calculator
+from constans import PHYSICS_CONSTANTS, PHYSICS_UNITS
+
+
+class ConstantsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Физические постоянные")
+        self.setFixedSize(700, 500)
+        self.initUI()
+
+    def initUI(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("Физические постоянные")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title)
+
+        self.constants_table = QTableWidget()
+        self.constants_table.setColumnCount(4)
+        self.constants_table.setHorizontalHeaderLabels(
+            ["Константа", "Значение", "Единица", "Описание"])
+        self.constants_table.horizontalHeader().setStretchLastSection(True)
+
+        layout.addWidget(self.constants_table)
+
+        # Кнопка закрытия
+        close_btn = QPushButton("Закрыть")
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn)
+
+        self.setLayout(layout)
+
+        # заполняем таблицу
+        self.fill_constants_table()
+
+    def fill_constants_table(self):
+        row = 0
+        for category, constants in PHYSICS_CONSTANTS.items():
+            # добавляем строку с категорией
+            self.constants_table.insertRow(row)
+            category_item = QTableWidgetItem(category)
+            category_item.setBackground(Qt.GlobalColor.lightGray)
+            self.constants_table.setItem(row, 0, category_item)
+            row += 1
+
+            for name, data in constants.items():
+                self.constants_table.insertRow(row)
+                self.constants_table.setItem(row, 0, QTableWidgetItem(name))
+                self.constants_table.setItem(
+                    row, 1, QTableWidgetItem(data["value"]))
+                self.constants_table.setItem(
+                    row, 2, QTableWidgetItem(data["unit"]))
+                self.constants_table.setItem(
+                    row, 3, QTableWidgetItem(data["description"]))
+                row += 1
+
+
+class UnitsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Единицы измерения")
+        self.setFixedSize(700, 500)
+        self.initUI()
+
+    def initUI(self):
+        layout = QVBoxLayout()
+
+        title = QLabel("Единицы измерения")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title)
+
+        self.units_table = QTableWidget()
+        self.units_table.setColumnCount(4)
+        self.units_table.setHorizontalHeaderLabels(
+            ["Единица", "Обозначение", "Величина", "Определение"])
+        self.units_table.horizontalHeader().setStretchLastSection(True)
+
+        layout.addWidget(self.units_table)
+
+        # Кнопка закрытия
+        close_btn = QPushButton("Закрыть")
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn)
+
+        self.setLayout(layout)
+
+        # Заполняем таблицу
+        self.fill_units_table()
+
+    def fill_units_table(self):
+        row = 0
+        for category, units in PHYSICS_UNITS.items():
+            # Добавляем строку с категорией
+            self.units_table.insertRow(row)
+            category_item = QTableWidgetItem(category)
+            category_item.setBackground(Qt.GlobalColor.lightGray)
+            self.units_table.setItem(row, 0, category_item)
+            row += 1
+
+            # Добавляем единицы этой категории
+            for name, data in units.items():
+                self.units_table.insertRow(row)
+                self.units_table.setItem(row, 0, QTableWidgetItem(name))
+                self.units_table.setItem(
+                    row, 1, QTableWidgetItem(data["symbol"]))
+                self.units_table.setItem(
+                    row, 2, QTableWidgetItem(data["quantity"]))
+                self.units_table.setItem(
+                    row, 3, QTableWidgetItem(data["definition"]))
+                row += 1
+
+
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("О программе")
+        self.setFixedSize(300, 200)
+
+        layout = QVBoxLayout()
+
+        title = QLabel("Физический Калькулятор")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+
+        version = QLabel("Версия 1.0")
+        info = QLabel("Расчет физических формул\n\nPyQt6 + Python")
+
+        close_btn = QPushButton("Закрыть")
+        close_btn.clicked.connect(self.close)
+
+        layout.addWidget(title)
+        layout.addWidget(version)
+        layout.addWidget(info)
+        layout.addWidget(close_btn)
+
+        self.setLayout(layout)
+
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setWindowTitle("Настройки")
+        self.setFixedSize(250, 150)
+
+        layout = QVBoxLayout()
+
+        title = QLabel("Настройки программы")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+
+        layout.addWidget(QLabel("Точность вычислений:"))
+        self.precision_combo = QComboBox()
+        self.precision_combo.addItems(["2", "4", "6", "8", "10"])
+
+        if hasattr(parent, 'calculation_precision'):
+            current_precision = parent.calculation_precision
+        else:
+            current_precision = 6
+
+        self.precision_combo.setCurrentText(str(current_precision))
+
+        buttons_layout = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton("Отмена")
+
+        ok_btn.clicked.connect(self.accept)
+        cancel_btn.clicked.connect(self.reject)
+
+        buttons_layout.addWidget(ok_btn)
+        buttons_layout.addWidget(cancel_btn)
+
+        layout.addWidget(title)
+        layout.addWidget(self.precision_combo)
+        layout.addLayout(buttons_layout)
+
+        self.setLayout(layout)
 
 
 class PhysicsCalculator(QMainWindow):
@@ -128,8 +303,11 @@ class PhysicsCalculator(QMainWindow):
 
         # меню "справочник"
         reference_menu = menuBar.addMenu("Справочник")
-        reference_menu.addAction("Константы")
-        reference_menu.addAction("Единицы измерения")
+        constants_action = reference_menu.addAction("Константы")
+        units_action = reference_menu.addAction("Единицы измерения")
+
+        constants_action.triggered.connect(self.show_constants)
+        units_action.triggered.connect(self.show_units)
 
         # меню "темы"
         themes_menu = menuBar.addMenu("Темы")
@@ -144,10 +322,45 @@ class PhysicsCalculator(QMainWindow):
         history_menu.addAction("Очистить историю")
         history_menu.addAction("Показать историю")
 
+        # меню "Настройки"
+        settings_menu = menuBar.addMenu("Настройки")
+        settings_action = settings_menu.addAction("Настройки")
+        settings_action.triggered.connect(self.show_settings)
+
+        # меню "Справка"
+        help_menu = menuBar.addMenu("Справка")
+        about_action = help_menu.addAction("О программе")
+        about_action.triggered.connect(self.show_about)
+
+    def show_constants(self):
+        """Показать справочник констант"""
+        dialog = ConstantsDialog(self)
+        dialog.exec()
+
+    def show_units(self):
+        """Показать справочник единиц измерения"""
+        dialog = UnitsDialog(self)
+        dialog.exec()
+
+    def show_about(self):
+        """Показать диалог О программе"""
+        dialog = AboutDialog(self)
+        dialog.exec()
+
+    def show_settings(self):
+        """Показать диалог настроек"""
+        dialog = SettingsDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # сохраняем точность
+            self.calculation_precision = int(
+                dialog.precision_combo.currentText())
+            QMessageBox.information(
+                self, "Настройки", f"Точность установлена: {self.calculation_precision} знаков")
+
     def apply_theme(self, theme_name):
         """Применение выбранной темы"""
         self.current_theme = theme_name
-        self.save_theme(theme_name)  # сохраняем в файл
+        self.save_theme(theme_name)
 
         theme = DARK_THEME if theme_name == "dark" else LIGHT_THEME
 
@@ -171,7 +384,7 @@ class PhysicsCalculator(QMainWindow):
         self.formula_list.setStyleSheet(theme["list_widget"])
         self.calculate_button.setStyleSheet(theme["calculate_button"])
 
-        # Обновляем стили полей ввода
+        # обновляем стили полей ввода
         for input_field in self.input_fields.values():
             input_field.setStyleSheet(theme["input_field"])
 
@@ -240,6 +453,7 @@ class PhysicsCalculator(QMainWindow):
     # метод для вычисления
     def calculate(self):
         if not hasattr(self, 'current_formula_name'):
+            self.result_label.setStyleSheet("color: red; font-size: 12px;")
             self.result_label.setText("Сначала выберите формулу")
             return
 
@@ -265,12 +479,13 @@ class PhysicsCalculator(QMainWindow):
             result = calculation_result["result"]
             target_var = calculation_result["target_variable"]
 
-            # отображаем результат в соответствующем поле ввода зеленым цветом
+            # отображаем результат в соответствующем поле ввода с нужной точностью
             if target_var in self.input_fields:
                 result_field = self.input_fields[target_var]
-                result_field.setText(f"{result:.6f}")
+                result_field.setText(
+                    f"{result:.{self.calculation_precision}f}")
 
-                # применяем зеленый стиль для поля с результатом
+                # применяем зеленый стиль для поле с результатом
                 result_field.setStyleSheet("""
                     QLineEdit {
                         background-color: #388e3c;
