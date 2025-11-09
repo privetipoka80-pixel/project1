@@ -50,12 +50,18 @@ pip install PyQt6
 - ## Структура проекта
     ```
     project1/
-    ├── main.py                # главный файл
+    ├── texture/               # папка с текстурами
+        └── app_icon.png       # иконка приложения
     ├── calculator.py          # логика вычислений
+    ├── constans.py            # файл с константами для справочника
     ├── formulas.py            # база данных формул
-    ├── styles.py              # стили оформления
+    ├── main.py                # главный файл
+    ├── PhysicsCalculator.exe  # собранное приложение
     ├── README.md              # описание проекта
+    ├── requirements.txt       # нужные зависимости
+    ├── styles.py              # стили оформления
     └── theme_status.txt       # файл для хранения текущей темы
+    
     ```
 - ## Основные компоненты
     PhysicsCalculator - главное окно приложения

@@ -1,14 +1,93 @@
-import sys
-import os
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QListWidget, QComboBox,
-                             QLineEdit, QPushButton, QDialog, QMessageBox, QTableWidgetItem, QTableWidget, QTabWidget)
-from PyQt6.QtCore import Qt
-from formulas import categories
-from styles import DARK_THEME, LIGHT_THEME
-
-from calculator import Calculator
+                             QLineEdit, QPushButton, QDialog, QMessageBox, QTableWidgetItem, QTableWidget)
+from PyQt6.QtGui import QIcon
 from constans import PHYSICS_CONSTANTS, PHYSICS_UNITS
+from styles import DARK_THEME, LIGHT_THEME
+from formulas import CATEGORIES
+from calculator import Calculator
+from datetime import datetime
+from PyQt6.QtCore import Qt
+import sqlite3
+import json
+import sys
+import os
+
+
+class HistoryDB:
+    def __init__(self):
+        self.conn = sqlite3.connect('history.db')
+        self.create_table()
+
+    def create_table(self):
+        """Создаем одну таблицу для истории"""
+        self.conn.execute('''CREATE TABLE IF NOT EXISTS history
+                         (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          formula_name TEXT,
+                          inputs TEXT,
+                          result TEXT,
+                          timestamp TEXT)''')
+        self.conn.commit()
+
+    def add_calculation(self, formula_name, inputs, result):
+        """Добавляем запись в историю"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        inputs_json = json.dumps(inputs)  # сохраняем как JSON
+
+        self.conn.execute('INSERT INTO history (formula_name, inputs, result, timestamp) VALUES (?, ?, ?, ?)',
+                          (formula_name, inputs_json, str(result), timestamp))
+        self.conn.commit()
+
+    def get_history(self):
+        """Получаем всю историю"""
+        cursor = self.conn.execute(
+            'SELECT * FROM history ORDER BY timestamp DESC')
+        return cursor.fetchall()
+
+    def clear_history(self):
+        """Очищаем историю"""
+        self.conn.execute('DELETE FROM history')
+        self.conn.commit()
+
+
+class HistoryDialog(QDialog):
+    def __init__(self, db, parent=None):
+        super().__init__(parent)
+        self.db = db
+        self.setWindowTitle("История вычислений")
+        self.setFixedSize(600, 400)
+
+        layout = QVBoxLayout()
+
+        # таблица
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(
+            ["Формула", "Входные данные", "Результат", "Время"])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        layout.addWidget(self.table)
+
+        self.setLayout(layout)
+        self.load_history()
+
+    def load_history(self):
+        """Загружаем историю в таблицу"""
+        history = self.db.get_history()
+        self.table.setRowCount(len(history))
+
+        for row, record in enumerate(history):
+            id, formula_name, inputs_json, result, timestamp = record
+            inputs = json.loads(inputs_json)  # преобразуем обратно из JSON
+
+            # форматируем входные данные в красивую строку
+            inputs_str = ", ".join([f"{k} = {v}" for k, v in inputs.items()])
+
+            self.table.setItem(row, 0, QTableWidgetItem(formula_name))
+            self.table.setItem(row, 1, QTableWidgetItem(inputs_str))
+            self.table.setItem(row, 2, QTableWidgetItem(result))
+            self.table.setItem(row, 3, QTableWidgetItem(timestamp))
+
+        self.table.resizeColumnsToContents()
 
 
 class ConstantsDialog(QDialog):
@@ -190,7 +269,18 @@ class PhysicsCalculator(QMainWindow):
         super().__init__()
         self.theme_file = "theme_status.txt"
         self.current_theme = self.load_theme()  # загружаем тему из файла
+        self.db = HistoryDB()  # добавление БД
+        self.calculation_precision = 6
+        self.set_app_icon()  # иконка приложения
         self.initUI()
+
+    def set_app_icon(self):
+        """Устанавливает иконку с правильным путем для exe"""
+
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+        icon_path = os.path.join(base_path, "texture", "app_icon.png")
+        self.setWindowIcon(QIcon(icon_path))
 
     def load_theme(self):
         """Загрузка темы из файла"""
@@ -288,7 +378,7 @@ class PhysicsCalculator(QMainWindow):
         # инициализация
         self.input_fields = {}
         self.current_formula = None
-        self.category_combo.addItems(categories)
+        self.category_combo.addItems(CATEGORIES)
         self.category_combo.currentTextChanged.connect(
             self.update_formulas_list)
         self.formula_list.currentTextChanged.connect(self.on_formula_selected)
@@ -319,8 +409,11 @@ class PhysicsCalculator(QMainWindow):
 
         # меню "история"
         history_menu = menuBar.addMenu("История")
-        history_menu.addAction("Очистить историю")
-        history_menu.addAction("Показать историю")
+        show_history_action = history_menu.addAction("Показать историю")
+        clear_history_action = history_menu.addAction("Очистить историю")
+
+        show_history_action.triggered.connect(self.show_history)
+        clear_history_action.triggered.connect(self.clear_history)
 
         # меню "Настройки"
         settings_menu = menuBar.addMenu("Настройки")
@@ -393,8 +486,8 @@ class PhysicsCalculator(QMainWindow):
         category = self.category_combo.currentText()
         self.formula_list.clear()
 
-        if category in categories:
-            self.formula_list.addItems(categories[category])
+        if category in CATEGORIES:
+            self.formula_list.addItems(CATEGORIES[category])
 
     def on_formula_selected(self, formula_name):
         if not formula_name:
@@ -403,7 +496,7 @@ class PhysicsCalculator(QMainWindow):
         self.current_formula_name = formula_name
         category = self.category_combo.currentText()
 
-        formula_data = categories[category][formula_name]
+        formula_data = CATEGORIES[category][formula_name]
 
         # обновление отображения формулы
         self.formula_name_label.setText(formula_name)
@@ -450,6 +543,16 @@ class PhysicsCalculator(QMainWindow):
         # обновление интерфейса
         self.variables_layout.update()
 
+    def show_history(self):
+        """Показываем диалог истории"""
+        dialog = HistoryDialog(self.db, self)
+        dialog.exec()
+
+    def clear_history(self):
+        """Очищаем историю"""
+        self.db.clear_history()
+        QMessageBox.information(self, "История", "История вычислений очищена")
+
     # метод для вычисления
     def calculate(self):
         if not hasattr(self, 'current_formula_name'):
@@ -463,7 +566,7 @@ class PhysicsCalculator(QMainWindow):
         # получаем текущую категорию и формулу
         category = self.category_combo.currentText()
         formula_name = self.current_formula_name
-        formula_data = {formula_name: categories[category][formula_name]}
+        formula_data = {formula_name: CATEGORIES[category][formula_name]}
 
         # собираем значения из полей ввода
         input_values = {}
@@ -479,7 +582,13 @@ class PhysicsCalculator(QMainWindow):
             result = calculation_result["result"]
             target_var = calculation_result["target_variable"]
 
-            # отображаем результат в соответствующем поле ввода с нужной точностью
+            # Создаем копию input_values и добавляем результат
+            all_data = input_values.copy()
+            all_data[target_var] = f"{result:.{self.calculation_precision}f}"
+
+            self.db.add_calculation(formula_name, all_data, str(result))
+
+            # отображаем результат в соответствующем поле ввода
             if target_var in self.input_fields:
                 result_field = self.input_fields[target_var]
                 result_field.setText(

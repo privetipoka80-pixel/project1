@@ -1,4 +1,4 @@
-categories = {
+CATEGORIES = {
     "Механика": {
         "Второй закон Ньютона": {
             "formula": "F = m·a",

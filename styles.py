@@ -4,17 +4,17 @@ DARK_THEME = {
         background-color: #1e1e1e;
         color: white;
     """,
-    
+
     "title_label": """
         font-size: 16px;
         font-weight: bold;
     """,
-    
+
     "subtitle_label": """
         font-size: 13px;
         color: #cccccc;
     """,
-    
+
     "combo_box": """
         QComboBox {
             padding: 8px;
@@ -45,7 +45,7 @@ DARK_THEME = {
             outline: none;
         }
     """,
-    
+
     "list_widget": """
         QListWidget {
             background-color: #2a2a2a;
@@ -72,18 +72,18 @@ DARK_THEME = {
             background-color: #3a3a3a;
         }
     """,
-    
+
     "formula_name": """
         font-size: 18px;
         font-weight: bold;
     """,
-    
+
     "formula_expression": """
         font-size: 16px;
         font-style: italic;
         color: #4CAF50;
     """,
-    
+
     "calculate_button": """
         QPushButton {
             background-color: #4CAF50;
@@ -97,12 +97,12 @@ DARK_THEME = {
             border: none;
         }
     """,
-    
+
     "result_label": """
         font-weight: bold;
         color: #4CAF50;
     """,
-    
+
     "input_field": """
         QLineEdit {
             padding: 8px;
@@ -123,19 +123,19 @@ LIGHT_THEME = {
         background-color: #f5f5f5;
         color: #333333;
     """,
-    
+
     "title_label": """
         font-size: 16px;
         font-weight: bold;
         color: #222222;
     """,
-    
+
     "subtitle_label": """
         font-size: 13px;
         color: #444444;
         font-weight: bold;
     """,
-    
+
     "combo_box": """
         QComboBox {
             padding: 8px;
@@ -169,7 +169,7 @@ LIGHT_THEME = {
             outline: none;
         }
     """,
-    
+
     "list_widget": """
         QListWidget {
             background-color: white;
@@ -199,19 +199,19 @@ LIGHT_THEME = {
             color: #222222;
         }
     """,
-    
+
     "formula_name": """
         font-size: 18px;
         font-weight: bold;
         color: #222222;
     """,
-    
+
     "formula_expression": """
         font-size: 16px;
         font-style: italic;
         color: #2E7D32;
     """,
-    
+
     "calculate_button": """
         QPushButton {
             background-color: #4CAF50;
@@ -226,12 +226,12 @@ LIGHT_THEME = {
             border: none;
         }
     """,
-    
+
     "result_label": """
         font-weight: bold;
         color: #2E7D32;
     """,
-    
+
     "input_field": """
         QLineEdit {
             padding: 8px;
