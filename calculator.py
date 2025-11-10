@@ -74,6 +74,8 @@ class Calculator:
         """
         try:
             if formula_name == "Второй закон Ньютона":
+                if known_vars.get("m", 1) <= 0:
+                    return None
                 if target_var == "F":
                     return known_vars["m"] * known_vars["a"]
                 elif target_var == "m":
@@ -82,6 +84,10 @@ class Calculator:
                     return known_vars["F"] / known_vars["m"]
 
             elif formula_name == "Кинетическая энергия":
+                if (known_vars.get("Eₖ", 0) < 0 or
+                    known_vars.get("m", 1) <= 0 or
+                        (target_var != "Eₖ" and known_vars.get("Eₖ", 1) == 0)):
+                    return None
                 if target_var == "Eₖ":
                     return (known_vars["m"] * known_vars["v"] ** 2) / 2
                 elif target_var == "m":
@@ -90,6 +96,12 @@ class Calculator:
                     return math.sqrt((2 * known_vars["Eₖ"]) / known_vars["m"])
 
             elif formula_name == "Потенциальная энергия":
+                if (known_vars.get("Eₚ", 0) < 0 or
+                    known_vars.get("m", 1) <= 0 or
+                    known_vars.get("g", 1) <= 0 or
+                    known_vars.get("h", 0) < 0 or
+                        (target_var != "Eₚ" and known_vars.get("h", 1) == 0)):
+                    return None
                 if target_var == "Eₚ":
                     return known_vars["m"] * known_vars["g"] * known_vars["h"]
                 elif target_var == "m":
@@ -100,6 +112,8 @@ class Calculator:
                     return known_vars["Eₚ"] / (known_vars["m"] * known_vars["g"])
 
             elif formula_name == "Импульс":
+                if known_vars.get("m", 1) <= 0:
+                    return None
                 if target_var == "p":
                     return known_vars["m"] * known_vars["v"]
                 elif target_var == "m":
@@ -108,6 +122,8 @@ class Calculator:
                     return known_vars["p"] / known_vars["m"]
 
             elif formula_name == "Закон Ома":
+                if known_vars.get("R", 1) <= 0:
+                    return None
                 if target_var == "I":
                     return known_vars["U"] / known_vars["R"]
                 elif target_var == "U":
@@ -116,6 +132,8 @@ class Calculator:
                     return known_vars["U"] / known_vars["I"]
 
             elif formula_name == "Мощность тока":
+                if known_vars.get("P", 0) < 0:
+                    return None
                 if target_var == "P":
                     return known_vars["U"] * known_vars["I"]
                 elif target_var == "U":
@@ -124,6 +142,10 @@ class Calculator:
                     return known_vars["P"] / known_vars["U"]
 
             elif formula_name == "Энергия конденсатора":
+                if (known_vars.get("W", 0) < 0 or
+                    known_vars.get("C", 1) <= 0 or
+                        (target_var != "W" and known_vars.get("W", 1) == 0)):
+                    return None
                 if target_var == 'W':
                     return (known_vars['C'] * known_vars['U'] ** 2) / 2
                 elif target_var == 'C':
@@ -132,6 +154,11 @@ class Calculator:
                     return math.sqrt((2 * known_vars['W']) / known_vars['C'])
 
             elif formula_name == 'КПД тепловой машины':
+                if (known_vars.get("η", 0) < 0 or
+                    known_vars.get("Q₁", 1) <= 0 or
+                    known_vars.get("Q₂", 0) < 0 or
+                        known_vars.get("η", 101) > 100):
+                    return None
                 if target_var == 'η':
                     return ((known_vars['Q₁'] - known_vars['Q₂']) / known_vars['Q₁']) * 100
                 elif target_var == 'Q₂':
@@ -140,6 +167,10 @@ class Calculator:
                     return known_vars['Q₂'] / (1 - (known_vars['η'] / 100))
 
             elif formula_name == 'Удельная теплота':
+                if (known_vars.get("Q", 0) < 0 or
+                    known_vars.get("c", 1) <= 0 or
+                        known_vars.get("m", 1) <= 0):
+                    return None
                 if target_var == 'Q':
                     return known_vars['c'] * known_vars['m'] * known_vars['ΔT']
                 elif target_var == 'c':
@@ -155,6 +186,11 @@ class Calculator:
                 n1 = known_vars.get('n₁', 0)
                 n2 = known_vars.get('n₂', 0)
 
+                if (n1 <= 0 or n2 <= 0 or
+                    known_vars.get('α', 0) <= 0 or known_vars.get('α', 91) >= 90 or
+                        known_vars.get('β', 0) <= 0 or known_vars.get('β', 91) >= 90):
+                    return None
+
                 if target_var == 'n₁':
                     return (n2 * sin_b) / sin_a
                 elif target_var == 'n₂':
@@ -165,6 +201,10 @@ class Calculator:
                     return math.degrees(math.asin((n1 * sin_a) / n2))
 
             elif formula_name == 'Формула тонкой линзы':
+                if (known_vars.get("d", 0) <= 0 or
+                    known_vars.get("f", 0) <= 0 or
+                        (target_var != "F" and known_vars.get("F", 0) == 0)):
+                    return None
                 if target_var == 'F':
                     return (known_vars['d'] * known_vars['f']) / (known_vars['d'] + known_vars['f'])
                 elif target_var == 'd':
@@ -173,6 +213,11 @@ class Calculator:
                     return (known_vars['F'] * known_vars['d']) / (known_vars['d'] - known_vars['F'])
 
             elif formula_name == 'Расход жидкости':
+
+                if (known_vars.get("Q", 0) < 0 or
+                    known_vars.get("S", 1) <= 0 or
+                        known_vars.get("v", 0) < 0):
+                    return None
                 if target_var == 'Q':
                     return known_vars['S'] * known_vars['v']
                 elif target_var == 'S':
@@ -181,6 +226,11 @@ class Calculator:
                     return known_vars['Q'] / known_vars['S']
 
             elif formula_name == 'Сила Архимеда':
+                if (known_vars.get("F", 0) < 0 or
+                    known_vars.get("ρ", 1) <= 0 or
+                    known_vars.get("g", 1) <= 0 or
+                        known_vars.get("V", 0) < 0):
+                    return None
                 if target_var == 'F':
                     return known_vars['ρ'] * known_vars['g'] * known_vars['V']
                 elif target_var == 'ρ':
