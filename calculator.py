@@ -186,11 +186,6 @@ class Calculator:
                 n1 = known_vars.get('n₁', 0)
                 n2 = known_vars.get('n₂', 0)
 
-                if (n1 <= 0 or n2 <= 0 or
-                    known_vars.get('α', 0) <= 0 or known_vars.get('α', 91) >= 90 or
-                        known_vars.get('β', 0) <= 0 or known_vars.get('β', 91) >= 90):
-                    return None
-
                 if target_var == 'n₁':
                     return (n2 * sin_b) / sin_a
                 elif target_var == 'n₂':
@@ -201,10 +196,6 @@ class Calculator:
                     return math.degrees(math.asin((n1 * sin_a) / n2))
 
             elif formula_name == 'Формула тонкой линзы':
-                if (known_vars.get("d", 0) <= 0 or
-                    known_vars.get("f", 0) <= 0 or
-                        (target_var != "F" and known_vars.get("F", 0) == 0)):
-                    return None
                 if target_var == 'F':
                     return (known_vars['d'] * known_vars['f']) / (known_vars['d'] + known_vars['f'])
                 elif target_var == 'd':
