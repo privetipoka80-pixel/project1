@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QListWidget, QComboBox,
                              QLineEdit, QPushButton, QDialog, QMessageBox)
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from styles import DARK_THEME, LIGHT_THEME
 from const.formulas import CATEGORIES
 from calculator import Calculator
 import os
+from PyQt6.QtCore import Qt
 from classes.historyDB import HistoryDB
 from classes.dialogs import HistoryDialog, ConstantsDialog, UnitsDialog, AboutDialog, SettingsDialog
 
@@ -49,9 +50,44 @@ class PhysicsCalculator(QMainWindow):
                 f.write(theme)
         except Exception:
             pass
+    def update_formula_image(self, formula_name):
+        """обновление картинки в зависимости от выбранной формулы"""
+        # словарь путей к картинкам (где нет картинок, но есть путь - это костыль, чтобы не было ошибок,
+        #  нужно будет исправить)
+        image_mapping = {
+            'Второй закон Ньютона': 'texture/ВЗН.png',
+            'Кинетическая энергия': 'texture/КИПЭ.png',
+            'Потенциальная энергия': 'texture/КИПЭ.png',
+            'Импульс': 'texture/ИМП.png',
+            'КПД тепловой машины': 'texture/КПД.png',
+            'Удельная теплота' : 'texture/УТ.png',
+            'Закон Ома' : 'texture/ЗО.png',
+            'Мощность тока' : 'texture/ЗО.png', # подойдет картинка из закона Ома
+            'Энергия конденсатора' : 'texture/ЭК.png',
+            'Закон преломления' : 'texture/ЗП.png',
+            'Формула тонкой линзы' : 'texture/ФТЛ.png',
+            'Расход жидкости' : 'texture/РЖ.png',
+            'Сила Архимеда' : 'texture/СА.png',
+            
+        }
+        
+        
+        # Проверяем существование файла
+        image_path = image_mapping.get(formula_name)
+        if os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+                    # Масштабируем картинку
+            pixmap = pixmap.scaled(600, 250, Qt.AspectRatioMode.KeepAspectRatio, 
+                            Qt.TransformationMode.SmoothTransformation)
+        
+            self.piclabel.setPixmap(pixmap)
+        else:
+            self.piclabel.setPixmap(QPixmap())
+
+
 
     def initUI(self):
-        self.setWindowTitle('Физический калькулятор')
+        self.setWindowTitle('Калькулятор для физики')
         self.setGeometry(100, 100, 900, 600)
 
         central_widget = QWidget()
@@ -90,15 +126,33 @@ class PhysicsCalculator(QMainWindow):
         self.right_layout = QVBoxLayout(right_panel)
         self.right_layout.setSpacing(10)
 
-        # добавление элементов для отображения формулы
+        # создаем горизонтальный layout для формулы и картинки
+        formula_pic_layout = QHBoxLayout()
+        
+        # левая часть - текст формулы
+        formula_text_layout = QVBoxLayout()
+        
         self.formula_name_label = QLabel("Выберите формулу")
-        self.right_layout.addWidget(self.formula_name_label)
+        formula_text_layout.addWidget(self.formula_name_label)
 
         self.formula_expression_label = QLabel("")
-        self.right_layout.addWidget(self.formula_expression_label)
+        formula_text_layout.addWidget(self.formula_expression_label)
 
         self.category_label = QLabel("")
-        self.right_layout.addWidget(self.category_label)
+        formula_text_layout.addWidget(self.category_label)
+        
+        # правая часть - картинка
+        self.piclabel = QLabel(self)
+
+        self.piclabel.setMaximumSize(600, 250)
+        
+        
+        # добавляем обе части в горизонтальный layout
+        formula_pic_layout.addLayout(formula_text_layout)
+        formula_pic_layout.addWidget(self.piclabel)
+        
+        # добавляем горизонтальный layout в правую панель
+        self.right_layout.addLayout(formula_pic_layout)
 
         # layout для переменных
         self.variables_layout = QVBoxLayout()
@@ -241,6 +295,7 @@ class PhysicsCalculator(QMainWindow):
 
         self.current_formula_name = formula_name
         category = self.category_combo.currentText()
+        self.update_formula_image(formula_name)
 
         formula_data = CATEGORIES[category][formula_name]
 

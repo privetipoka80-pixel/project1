@@ -194,7 +194,7 @@ class SettingsDialog(QDialog):
 
         layout.addWidget(QLabel("Точность вычислений:"))
         self.precision_combo = QComboBox()
-        self.precision_combo.addItems(["2", "4", "6", "8", "10"])
+        self.precision_combo.addItems(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
 
         if hasattr(parent, 'calculation_precision'):
             current_precision = parent.calculation_precision
